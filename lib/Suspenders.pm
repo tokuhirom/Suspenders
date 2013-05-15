@@ -126,7 +126,7 @@ __END__
 
 =head1 NAME
 
-Suspenders - It's new $module
+Suspenders - Server spec checker
 
 =head1 SYNOPSIS
 
@@ -134,6 +134,7 @@ Suspenders - It's new $module
 
     describe '/etc/passwd' => sub {
         it should be file;
+        it should contain 'www-data';
     };
 
 =head1 DESCRIPTION
@@ -143,9 +144,6 @@ Suspenders is ...
 =head1 TODO
 
     - more commands
-    - ssh backend
-
-        backend_ssh('www01.example.com');
 
 =head1 LICENSE
 
