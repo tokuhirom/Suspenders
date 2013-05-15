@@ -10,6 +10,8 @@ use Suspenders::Commands::Base;
 
 our $VERSION = "0.01";
 
+our @EXPORTABLE_COMMANDS = qw(contain file installed);
+
 our $STUFF;
 our $NOT;
 our $COMMAND;
@@ -89,7 +91,7 @@ sub skip_all {
     exit 0;
 }
 
-for my $command (qw(contain file installed)) {
+for my $command (@EXPORTABLE_COMMANDS) {
     no strict 'refs';
     *{__PACKAGE__ . '::' . $command} = sub {
         unshift @MSG, $command, @_;
@@ -130,6 +132,18 @@ Suspenders - Server spec checker
 =head1 DESCRIPTION
 
 Suspenders is ...
+
+=head1 HOW CAN I ADD TESTING STUFF?
+
+You can add any testing stuff by two steps.
+
+=over 4
+
+=item Add it to Suspenders::Commands::*
+
+=item Add it to @EXPORTABLE_COMMANDS in Suspenders.pm
+
+=back
 
 =head1 TODO
 
