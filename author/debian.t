@@ -5,10 +5,6 @@ use Suspenders;
 
 commands 'Debian';
 
-describe 'httpd' => sub {
-    it should be installed;
-};
-
 describe 'coreutils' => sub {
     it should be installed;
 };

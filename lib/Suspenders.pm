@@ -19,6 +19,7 @@ our $FAILED;
 our $BACKEND;
 our $BANNER;
 our $COMMANDS;
+our $SKIPPED;
 
 BEGIN { $|++ };
 
@@ -46,6 +47,8 @@ sub describe {
 }
 
 sub END {
+    return if $SKIPPED;
+
     if ($FAILED || $?!=0) {
         print "not ok\n1..1\n";
     } else {
@@ -78,6 +81,13 @@ sub should($) {unshift @MSG, 'should'}
 sub be($) { unshift @MSG, 'be' }
 
 sub not($) { $NOT++; unshift @MSG, 'not'; }
+
+sub skip_all {
+    my $reason = shift || '';
+    $SKIPPED++;
+    print "1..0 # SKIP $reason\n";
+    exit 0;
+}
 
 for my $command (qw(contain file installed)) {
     no strict 'refs';
