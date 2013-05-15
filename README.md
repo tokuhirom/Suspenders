@@ -1,14 +1,23 @@
 # NAME
 
-Suspenders - It's new $module
+Suspenders - Server spec checker
 
 # SYNOPSIS
 
     use Suspenders;
 
+    describe '/etc/passwd' => sub {
+        it should be file;
+        it should contain 'www-data';
+    };
+
 # DESCRIPTION
 
 Suspenders is ...
+
+# TODO
+
+    - more commands
 
 # LICENSE
 
