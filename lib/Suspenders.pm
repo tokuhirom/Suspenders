@@ -1,51 +1,11 @@
 use 5.008001;
 use strict;
 use warnings;
-package Suspenders;
-
-package Suspenders::Backend::Exec;
-
-sub new { bless {}, shift }
-
-sub as_string { "exec" }
-
-sub run {
-    my ($self, $cmdline) = @_;
-    return system($cmdline);
-}
-
-package Suspenders::Backend::SSH;
-
-sub new {
-    my ($class, $host) = @_;
-    Carp::croak("Missing mandatory parameter: host") unless $host;
-    bless { host => $host }, $class;
-}
-
-sub as_string { "ssh @{[ $_[0]->{host} ]}" }
-
-sub run {
-    my ($self, $cmdline) = @_;
-    return system('ssh', $self->{host}, $cmdline);
-}
-
-package Suspenders::Commands;
-use String::ShellQuote;
-
-sub check_file {
-    # "test -f %1"
-    "test -f @{[ shell_quote shift ]}";
-}
-
-sub check_file_contain {
-    sprintf('grep -q %s %s',
-        quotemeta $_[1],
-        shell_quote $_[0], # file name
-    );
-}
 
 package Suspenders;
 use parent qw(Exporter);
+use Suspenders::Backend::Exec;
+use Suspenders::Commands;
 
 our $VERSION = "0.01";
 
@@ -57,12 +17,13 @@ our $COMMAND;
 our @ARGS;
 our @MSG;
 our $FAILED;
-our $BACKEND = Suspenders::Backend::Exec->new();
+our $BACKEND;
 our $BANNER;
 
 BEGIN { $|++ };
 
 sub backend_ssh($) {
+    require Suspenders::Backend::SSH;
     $BACKEND = Suspenders::Backend::SSH->new(@_);
 }
 
@@ -71,6 +32,7 @@ sub describe {
     local $STUFF = $stuff;
     local $NOT = 0;
     local $COMMAND;
+    $BACKEND ||= Suspenders::Backend::Exec->new();
 
     unless ($BANNER++) {
         printf "  Remote:%s\n\n", $BACKEND->as_string();
