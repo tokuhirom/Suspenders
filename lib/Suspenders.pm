@@ -3,32 +3,39 @@ use 5.012;
 use strict;
 use warnings;
 use parent qw(Exporter);
-use Test::More ();
 
 our $VERSION = "0.01";
 
 our @EXPORT = qw( it should be file describe not contain );
-
-my $builder = Test::More->builder;
 
 our $STUFF;
 our $NOT;
 our $COMMAND;
 our @ARGS;
 our @MSG;
+our $FAILED;
+BEGIN { $|++ };
 
 sub describe {
     my ($stuff, $code) = @_;
     local $STUFF = $stuff;
     local $NOT = 0;
     local $COMMAND;
-    Test::More::note("------------------------------------------\n$stuff");
+    printf("  $stuff\n");
     $code->();
+    print("\n");
 
 }
 
+sub END {
+    if ($FAILED) {
+        print "not ok\n";
+    } else {
+        print "ok\n";
+    }
+}
+
 sub it {
-    local $Test::Builder::Level = $Test::Builder::Level + 1;
     unshift @MSG, 'it';
     Suspenders::Backend::Exec->new()->run();
     @MSG = ();
@@ -64,7 +71,10 @@ package Suspenders::Backend::Exec {
             or die "Unknown command: '$cmd'";
         my $cmdline = $code->($STUFF, @ARGS);
         my $retval = system($cmdline);
-        $builder->ok($Suspenders::NOT ? $retval != 0 : $retval == 0, join(' ', @Suspenders::MSG));
+        my $succeeded = $Suspenders::NOT ? $retval != 0 : $retval == 0;
+        my $msg = join(' ', @Suspenders::MSG);
+        printf("    %s %s\n", $succeeded ? 'o' : 'x', $msg);
+        $FAILED++ unless $succeeded;
     }
 }
 
