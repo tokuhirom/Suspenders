@@ -1,39 +1,37 @@
-use 5.012;
+use 5.008001;
 use strict;
 use warnings;
 package Suspenders;
 
-package Suspenders::Backend::Exec {
-    use Moo;
-    no Moo;
+package Suspenders::Backend::Exec;
 
-    sub run {
-        my $cmd = $Suspenders::COMMAND
-            or die "Invalid sequence";
-        my $code = Suspenders::Commands->can($cmd)
-            or die "Unknown command: '$cmd'";
-        my $cmdline = $code->($Suspenders::STUFF, @Suspenders::ARGS);
-        my $retval = system($cmdline);
-        my $succeeded = $Suspenders::NOT ? $retval != 0 : $retval == 0;
-        my $msg = join(' ', @Suspenders::MSG);
-        printf("    %s %s\n", $succeeded ? 'o' : 'x', $msg);
-        $Suspenders::FAILED++ unless $succeeded;
-    }
+sub new { bless {}, shift }
+
+sub run {
+    my $cmd = $Suspenders::COMMAND
+        or die "Invalid sequence";
+    my $code = Suspenders::Commands->can($cmd)
+        or die "Unknown command: '$cmd'";
+    my $cmdline = $code->($Suspenders::STUFF, @Suspenders::ARGS);
+    my $retval = system($cmdline);
+    my $succeeded = $Suspenders::NOT ? $retval != 0 : $retval == 0;
+    my $msg = join(' ', @Suspenders::MSG);
+    printf("    %s %s\n", $succeeded ? 'o' : 'x', $msg);
+    $Suspenders::FAILED++ unless $succeeded;
 }
 
-package Suspenders::Commands {
-    use String::ShellQuote;
+package Suspenders::Commands;
+use String::ShellQuote;
 
-    sub check_file {
-        # "test -f %1"
-        "test -f @{[ shell_quote shift ]}";
-    }
-    sub check_file_contain {
-        sprintf('grep -q %s %s',
-            quotemeta $_[1],
-            shell_quote $_[0], # file name
-        );
-    }
+sub check_file {
+    # "test -f %1"
+    "test -f @{[ shell_quote shift ]}";
+}
+sub check_file_contain {
+    sprintf('grep -q %s %s',
+        quotemeta $_[1],
+        shell_quote $_[0], # file name
+    );
 }
 
 package Suspenders;
@@ -116,6 +114,13 @@ Suspenders - It's new $module
 =head1 DESCRIPTION
 
 Suspenders is ...
+
+=head1 TODO
+
+    - more commands
+    - ssh backend
+
+        backend_ssh('www01.example.com');
 
 =head1 LICENSE
 
