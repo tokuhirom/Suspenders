@@ -5,6 +5,8 @@ use utf8;
 
 use String::ShellQuote;
 
+sub new { bless {}, shift }
+
 sub check_file {
     # "test -f %1"
     "test -f @{[ shell_quote shift ]}";

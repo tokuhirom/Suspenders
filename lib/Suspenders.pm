@@ -19,6 +19,7 @@ our @MSG;
 our $FAILED;
 our $BACKEND;
 our $BANNER;
+our $COMMANDS;
 
 BEGIN { $|++ };
 
@@ -33,6 +34,7 @@ sub describe {
     local $NOT = 0;
     local $COMMAND;
     $BACKEND ||= Suspenders::Backend::Exec->new();
+    $COMMANDS ||= Suspenders::Commands->new();
 
     unless ($BANNER++) {
         printf "  Remote:%s\n\n", $BACKEND->as_string();
@@ -57,7 +59,7 @@ sub it {
 
     my $cmd = $COMMAND
         or die "Invalid sequence";
-    my $code = Suspenders::Commands->can($cmd)
+    my $code = $COMMANDS->can($cmd)
         or die "Unknown command: '$cmd'";
     my $cmdline = $code->($STUFF, @ARGS);
 
