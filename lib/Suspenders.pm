@@ -5,7 +5,7 @@ use warnings;
 package Suspenders;
 use parent qw(Exporter);
 use Suspenders::Backend::Exec;
-use Suspenders::Commands;
+use Suspenders::Commands::Base;
 
 our $VERSION = "0.01";
 
@@ -34,7 +34,7 @@ sub describe {
     local $NOT = 0;
     local $COMMAND;
     $BACKEND ||= Suspenders::Backend::Exec->new();
-    $COMMANDS ||= Suspenders::Commands->new();
+    $COMMANDS ||= Suspenders::Commands::Base->new();
 
     unless ($BANNER++) {
         printf "  Remote:%s\n\n", $BACKEND->as_string();

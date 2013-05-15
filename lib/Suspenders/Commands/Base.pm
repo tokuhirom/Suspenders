@@ -1,4 +1,4 @@
-package Suspenders::Commands;
+package Suspenders::Commands::Base;
 use strict;
 use warnings;
 use utf8;
