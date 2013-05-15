@@ -6,7 +6,7 @@ use Suspenders;
 describe 'cpanfile' => sub {
     it should be file;
     it should contain 'Test::More';
-    it should contain 'Acme::Dot';
+    it should not contain 'Acme::Dot';
 };
 
 describe 'no-file' => sub {

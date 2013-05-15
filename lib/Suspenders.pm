@@ -1,7 +1,42 @@
-package Suspenders;
 use 5.012;
 use strict;
 use warnings;
+package Suspenders;
+
+package Suspenders::Backend::Exec {
+    use Moo;
+    no Moo;
+
+    sub run {
+        my $cmd = $Suspenders::COMMAND
+            or die "Invalid sequence";
+        my $code = Suspenders::Commands->can($cmd)
+            or die "Unknown command: '$cmd'";
+        my $cmdline = $code->($Suspenders::STUFF, @Suspenders::ARGS);
+        my $retval = system($cmdline);
+        my $succeeded = $Suspenders::NOT ? $retval != 0 : $retval == 0;
+        my $msg = join(' ', @Suspenders::MSG);
+        printf("    %s %s\n", $succeeded ? 'o' : 'x', $msg);
+        $Suspenders::FAILED++ unless $succeeded;
+    }
+}
+
+package Suspenders::Commands {
+    use String::ShellQuote;
+
+    sub check_file {
+        # "test -f %1"
+        "test -f @{[ shell_quote shift ]}";
+    }
+    sub check_file_contain {
+        sprintf('grep -q %s %s',
+            quotemeta $_[1],
+            shell_quote $_[0], # file name
+        );
+    }
+}
+
+package Suspenders;
 use parent qw(Exporter);
 
 our $VERSION = "0.01";
@@ -14,6 +49,7 @@ our $COMMAND;
 our @ARGS;
 our @MSG;
 our $FAILED;
+our $BACKEND = Suspenders::Backend::Exec->new();
 BEGIN { $|++ };
 
 sub describe {
@@ -29,15 +65,15 @@ sub describe {
 
 sub END {
     if ($FAILED) {
-        print "not ok\n";
+        print "not ok\n1..1\n";
     } else {
-        print "ok\n";
+        print "ok\n1..1\n";
     }
 }
 
 sub it {
     unshift @MSG, 'it';
-    Suspenders::Backend::Exec->new()->run();
+    $Suspenders::BACKEND->run();
     @MSG = ();
     $NOT = 0;
 }
@@ -57,60 +93,6 @@ package Suspenders::Util {
         open my $fh, '<', $fname
             or die "Cannot open $fname for reading: $!";
         do { local $/; <$fh> };
-    }
-}
-
-package Suspenders::Backend::Exec {
-    use Moo;
-    no Moo;
-
-    sub run {
-        my $cmd = $Suspenders::COMMAND
-            or die "Invalid sequence";
-        my $code = Suspenders::Commands->can($cmd)
-            or die "Unknown command: '$cmd'";
-        my $cmdline = $code->($STUFF, @ARGS);
-        my $retval = system($cmdline);
-        my $succeeded = $Suspenders::NOT ? $retval != 0 : $retval == 0;
-        my $msg = join(' ', @Suspenders::MSG);
-        printf("    %s %s\n", $succeeded ? 'o' : 'x', $msg);
-        $FAILED++ unless $succeeded;
-    }
-}
-
-package Suspenders::Commands {
-    use String::ShellQuote;
-
-    sub check_file {
-        # "test -f %1"
-        "test -f @{[ shell_quote shift ]}";
-    }
-    sub check_file_contain {
-        sprintf('grep -q %s %s',
-            quotemeta $_[1],
-            shell_quote $_[0], # file name
-        );
-    }
-}
-
-package Suspenders::Contain {
-    use Moo;
-    has text => (is => 'ro');
-    no Moo;
-
-    sub test {
-        my ($self, $stuff) = @_;
-        return (index(Suspenders::Util::slurp($stuff), $self->text) >= 0, "'$stuff' should contain '@{[ $self->text ]}'");
-    }
-}
-
-package Suspenders::File {
-    use Moo;
-    no Moo;
-
-    sub test {
-        my ($self, $stuff) = @_;
-        return (-f $stuff, "'$stuff' should be file");
     }
 }
 
