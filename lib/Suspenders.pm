@@ -12,28 +12,37 @@ our @EXPORT = qw( it should be file describe not contain );
 my $builder = Test::More->builder;
 
 our $STUFF;
+our $NOT;
+our $COMMAND;
+our @ARGS;
+our @MSG;
 
 sub describe {
     my ($stuff, $code) = @_;
     local $STUFF = $stuff;
+    local $NOT = 0;
+    local $COMMAND;
+    Test::More::note("------------------------------------------\n$stuff");
     $code->();
+
 }
 
 sub it {
     local $Test::Builder::Level = $Test::Builder::Level + 1;
-    my ($ret, $msg) = $_[0]->test($STUFF);
-    $builder->ok($ret, $msg);
+    unshift @MSG, 'it';
+    Suspenders::Backend::Exec->new()->run();
+    @MSG = ();
+    $NOT = 0;
 }
 
-sub should($) { $_[0] }
+sub should($) {unshift @MSG, 'should'}
 
-sub be($) { $_[0] }
+sub be($) { unshift @MSG, 'be' }
 
-sub not($) { Suspenders::Not->new(orig => $_[0]) }
+sub not($) { $NOT++; unshift @MSG, 'not'; }
 
-sub contain($) { Suspenders::Contain->new(text => shift) }
-
-sub file() { Suspenders::File->new() }
+sub contain($) {unshift @MSG, 'contain', @_; $COMMAND = 'check_file_contain'; @ARGS = @_; }
+sub file()     {unshift @MSG, 'file', @_; $COMMAND = 'check_file'; @ARGS = @_; }
 
 package Suspenders::Util {
     sub slurp {
@@ -44,18 +53,33 @@ package Suspenders::Util {
     }
 }
 
-package Suspenders::Not {
+package Suspenders::Backend::Exec {
     use Moo;
-
-    has orig => ( is => 'ro');
-
     no Moo;
 
-    sub test {
-        my ($self, $stuff) = @_;
-        my ($ret, $msg) = $self->orig->test($stuff);
-        $msg =~ s/ should / should not /;
-        return (!$ret, $msg);
+    sub run {
+        my $cmd = $Suspenders::COMMAND
+            or die "Invalid sequence";
+        my $code = Suspenders::Commands->can($cmd)
+            or die "Unknown command: '$cmd'";
+        my $cmdline = $code->($STUFF, @ARGS);
+        my $retval = system($cmdline);
+        $builder->ok($Suspenders::NOT ? $retval != 0 : $retval == 0, join(' ', @Suspenders::MSG));
+    }
+}
+
+package Suspenders::Commands {
+    use String::ShellQuote;
+
+    sub check_file {
+        # "test -f %1"
+        "test -f @{[ shell_quote shift ]}";
+    }
+    sub check_file_contain {
+        sprintf('grep -q %s %s',
+            quotemeta $_[1],
+            shell_quote $_[0], # file name
+        );
     }
 }
 
