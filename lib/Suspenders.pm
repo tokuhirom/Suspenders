@@ -64,12 +64,12 @@ sub it {
     my $cmd = $COMMAND
         or die "Invalid sequence";
     my $code = $COMMANDS->can($cmd)
-        or die "Unknown command: '$cmd'";
+        or die sprintf("[ERROR] Command '$cmd' is not supported by %s\n\n", ref $COMMANDS);
     my $cmdline = $code->($STUFF, @ARGS);
 
     my $retval = $BACKEND->run($cmdline);
 
-    my $succeeded = $NOT ? $retval != 0 : $retval == 0;
+    my $succeeded = $NOT ? !$retval : $retval;
     my $msg = join(' ', @MSG);
     printf("    %s %s\n", $succeeded ? 'o' : 'x', $msg);
     $FAILED++ unless $succeeded;
@@ -142,6 +142,14 @@ You can add any testing stuff by two steps.
 =item Add it to Suspenders::Commands::*
 
 =item Add it to @EXPORTABLE_COMMANDS in Suspenders.pm
+
+=back
+
+=head1 ENVIRONMENT VARIABLES
+
+=over 4
+
+=item SUSPENDERS_VERBOSE
 
 =back
 

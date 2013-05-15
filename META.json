@@ -42,6 +42,8 @@
       },
       "runtime" : {
          "requires" : {
+            "IPC::Run" : "0",
+            "Module::Functions" : "v2.1.2",
             "String::ShellQuote" : "0",
             "parent" : "0",
             "perl" : "5.008001"

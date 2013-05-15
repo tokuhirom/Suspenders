@@ -15,6 +15,17 @@ Suspenders - Server spec checker
 
 Suspenders is ...
 
+# HOW CAN I ADD TESTING STUFF?
+
+You can add any testing stuff by two steps.
+
+- Add it to Suspenders::Commands::\*
+- Add it to @EXPORTABLE\_COMMANDS in Suspenders.pm
+
+# ENVIRONMENT VARIABLES
+
+- SUSPENDERS\_VERBOSE
+
 # TODO
 
     - more commands
