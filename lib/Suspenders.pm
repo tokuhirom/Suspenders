@@ -93,18 +93,18 @@ sub END {
 sub it {
     unshift @MSG, 'it';
 
-    my $cmd = $Suspenders::COMMAND
+    my $cmd = $COMMAND
         or die "Invalid sequence";
     my $code = Suspenders::Commands->can($cmd)
         or die "Unknown command: '$cmd'";
-    my $cmdline = $code->($Suspenders::STUFF, @Suspenders::ARGS);
+    my $cmdline = $code->($STUFF, @ARGS);
 
-    my $retval = $Suspenders::BACKEND->run($cmdline);
+    my $retval = $BACKEND->run($cmdline);
 
-    my $succeeded = $Suspenders::NOT ? $retval != 0 : $retval == 0;
-    my $msg = join(' ', @Suspenders::MSG);
+    my $succeeded = $NOT ? $retval != 0 : $retval == 0;
+    my $msg = join(' ', @MSG);
     printf("    %s %s\n", $succeeded ? 'o' : 'x', $msg);
-    $Suspenders::FAILED++ unless $succeeded;
+    $FAILED++ unless $succeeded;
 
     @MSG = ();
     $NOT = 0;
