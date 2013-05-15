@@ -4,12 +4,11 @@ use warnings;
 
 package Suspenders;
 use parent qw(Exporter);
+use Module::Functions;
 use Suspenders::Backend::Exec;
 use Suspenders::Commands::Base;
 
 our $VERSION = "0.01";
-
-our @EXPORT = qw( it should be file describe not contain backend_ssh );
 
 our $STUFF;
 our $NOT;
@@ -47,7 +46,7 @@ sub describe {
 }
 
 sub END {
-    if ($FAILED) {
+    if ($FAILED || $?!=0) {
         print "not ok\n1..1\n";
     } else {
         print "ok\n1..1\n";
@@ -80,8 +79,25 @@ sub be($) { unshift @MSG, 'be' }
 
 sub not($) { $NOT++; unshift @MSG, 'not'; }
 
-sub contain($) {unshift @MSG, 'contain', @_; $COMMAND = 'check_file_contain'; @ARGS = @_; }
-sub file()     {unshift @MSG, 'file', @_; $COMMAND = 'check_file'; @ARGS = @_; }
+for my $command (qw(contain file installed)) {
+    no strict 'refs';
+    *{__PACKAGE__ . '::' . $command} = sub {
+        unshift @MSG, $command, @_;
+        $COMMAND = $command;
+        @ARGS = @_;
+    }
+}
+
+sub commands {
+    my $c = shift;
+      $c = $c =~ s/^\+// ? $c : "Suspenders::Commands::$c";
+    unless (eval "require $c; 1;") {
+        die "Cannot load $c: $@";
+    }
+    $COMMANDS = $c->new;
+}
+
+our @EXPORT = get_public_functions();
 
 1;
 __END__
